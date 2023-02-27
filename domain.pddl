@@ -21,9 +21,27 @@
 
         ; One predicate given for free!
         (hero-at ?loc - location)
+        (hero-get-key ?k - key)
+        (hero-no-key)
+
+        (key-at ?k - key ?loc - location)
+        (key-color ?k - key ?col - colour)
+        (key-usable ?k - key)
+        (one-use-key ?k - key)
+        (two-use-key ?k - key)
+
+        (path ?cor - corridor ?room1 - location ?room2 - location)
+        (cor-connected-to ?cor - corridor ?loc - location)
+        (is-locked ?cor - corridor) ; is a corridor locked?
+        (how-cor-locked ?cor - corridor ?col - colour) ; if a corridor is locked, how is it locked?
+        (risky ?cor - corridor)
+
+        (messy ?loc - location)
+
+
+        (goal ?loc - location)
 
         ; IMPLEMENT ME
-        (hero-at ?loc - location)
 
     )
 
@@ -42,14 +60,23 @@
         :precondition (and
 
             ; IMPLEMENT ME
+            (hero-at ?from)
+            (not (and
+                (not (path ?cor ?to ?from))
+                (not (path ?cor ?from ?to))
+            ))
+            (not (is-locked ?cor))
 
         )
 
         :effect (and
 
             ; IMPLEMENT ME
-
+            (hero-at ?to)
+            (not (hero-at ?from))
+            (when (how-cor-locked ?cor red) (and (not (path ?cor ?from ?to))(messy ?to)))
         )
+
     )
 
     ;Hero can pick up a key if the
@@ -64,13 +91,21 @@
 
         :precondition (and
 
+
             ; IMPLEMENT ME
+            (hero-at ?loc)
+            (key-at ?k ?loc)
+            (hero-no-key)
+            (not(messy ?loc))
 
         )
 
         :effect (and
 
             ; IMPLEMENT ME
+            (hero-get-key ?k)
+            (not (hero-no-key))
+            (not (key-at ?k ?loc))
 
         )
     )
@@ -86,12 +121,17 @@
         :precondition (and
 
             ; IMPLEMENT ME
+            (hero-get-key ?k)
+            (hero-at ?loc)
 
         )
 
         :effect (and
 
             ; IMPLEMENT ME
+            (not (hero-get-key ?k))
+            (hero-no-key)
+            (key-at ?k ?loc)
 
         )
     )
@@ -112,13 +152,25 @@
         :precondition (and
 
             ; IMPLEMENT ME
+            (hero-get-key ?k)
+            (key-usable ?k)
+            (how-cor-locked ?cor ?col)
+            (key-col ?k ?col)
+            (hero-at ?loc)
+            (cor-connected-to ?cor ?loc)
 
         )
 
         :effect (and
 
             ; IMPLEMENT ME
+            (not (is-locked ?cor))
 
+            (when (two-use-key ?k)
+            (and (not (two-use-key ?k)) (one-use-key ?k)))
+            (when (one-use-key ?k)
+            (and (not (one-use-key ?k)) (not (key-usable ?k)))
+            )
         )
     )
 
@@ -133,12 +185,15 @@
         :precondition (and
 
             ; IMPLEMENT ME
+            (hero-at ?loc)
+            (messy ?loc)
 
         )
 
         :effect (and
 
             ; IMPLEMENT ME
+            (not (messy ?loc))
 
         )
     )
