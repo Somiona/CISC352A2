@@ -23,6 +23,7 @@
         (hero-at ?loc - location)
 
         ; IMPLEMENT ME
+        (hero-at ?loc - location)
 
     )
 
