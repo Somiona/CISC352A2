@@ -20,29 +20,27 @@
     (:predicates
 
         ; One predicate given for free!
+        ; Hero related
         (hero-at ?loc - location)
         (hero-get-key ?k - key)
         (hero-no-key)
-
+        ; Key related
         (key-at ?k - key ?loc - location)
-        (key-color ?k - key ?col - colour)
+        (key-colour ?k - key ?col - colour)
         (key-usable ?k - key)
-        (one-use-key ?k - key)
-        (two-use-key ?k - key)
-
-        (path ?cor - corridor ?room1 - location ?room2 - location)
+        (key-use-one ?k - key)
+        (key-use-two ?k - key)
+        ; Corridor related
         (cor-connected-to ?cor - corridor ?loc - location)
-        (is-locked ?cor - corridor) ; is a corridor locked?
-        (how-cor-locked ?cor - corridor ?col - colour) ; if a corridor is locked, how is it locked?
-        (risky ?cor - corridor)
-
-        (messy ?loc - location)
-
-
-        (goal ?loc - location)
+        (cor-collapsed ?cor - corridor)
+        (cor-locked ?cor - corridor) ; is a corridor locked?
+        (cor-lock-colour ?cor - corridor ?col - colour) ; if a corridor is locked, how is it locked?
+        (cor-risky ?cor - corridor)
+        ; Room related
+        (room-messy ?loc - location)
+        (room-goal ?loc - location)
 
         ; IMPLEMENT ME
-
     )
 
     ; IMPORTANT: You should not change/add/remove the action names or parameters
@@ -61,12 +59,10 @@
 
             ; IMPLEMENT ME
             (hero-at ?from)
-            (not (and
-                (not (path ?cor ?to ?from))
-                (not (path ?cor ?from ?to))
-            ))
-            (not (is-locked ?cor))
-
+            (cor-connected-to ?cor ?from)
+            (cor-connected-to ?cor ?to)
+            (not (cor-collapsed ?cor))
+            (not (cor-locked ?cor))
         )
 
         :effect (and
@@ -74,7 +70,7 @@
             ; IMPLEMENT ME
             (hero-at ?to)
             (not (hero-at ?from))
-            (when (how-cor-locked ?cor red) (and (not (path ?cor ?from ?to))(messy ?to)))
+            (when (cor-risky ?cor) (and (cor-collapsed ?cor)(room-messy ?to)))
         )
 
     )
@@ -83,7 +79,7 @@
     ;    - hero is at current location ?loc,
     ;    - there is a key ?k at location ?loc,
     ;    - the hero's arm is free,
-    ;    - the location is not messy
+    ;    - the location is not room-messy
     ;Effect will have the hero holding the key and their arm no longer being free
     (:action pick-up
 
@@ -91,13 +87,11 @@
 
         :precondition (and
 
-
             ; IMPLEMENT ME
             (hero-at ?loc)
             (key-at ?k ?loc)
             (hero-no-key)
-            (not(messy ?loc))
-
+            (not(room-messy ?loc))
         )
 
         :effect (and
@@ -106,7 +100,6 @@
             (hero-get-key ?k)
             (not (hero-no-key))
             (not (key-at ?k ?loc))
-
         )
     )
 
@@ -123,7 +116,6 @@
             ; IMPLEMENT ME
             (hero-get-key ?k)
             (hero-at ?loc)
-
         )
 
         :effect (and
@@ -132,7 +124,6 @@
             (not (hero-get-key ?k))
             (hero-no-key)
             (key-at ?k ?loc)
-
         )
     )
 
@@ -154,30 +145,34 @@
             ; IMPLEMENT ME
             (hero-get-key ?k)
             (key-usable ?k)
-            (how-cor-locked ?cor ?col)
-            (key-col ?k ?col)
+            (cor-lock-colour ?cor ?col)
+            (key-colour ?k ?col)
             (hero-at ?loc)
             (cor-connected-to ?cor ?loc)
-
         )
 
         :effect (and
 
             ; IMPLEMENT ME
-            (not (is-locked ?cor))
+            (not (cor-locked ?cor))
 
-            (when (two-use-key ?k)
-            (and (not (two-use-key ?k)) (one-use-key ?k)))
-            (when (one-use-key ?k)
-            (and (not (one-use-key ?k)) (not (key-usable ?k)))
-            )
+            (when (key-use-two ?k)
+                (and
+                    (not (key-use-two ?k))
+                    (key-use-one ?k)
+            ))
+            (when (key-use-one ?k)
+                (and
+                    (not (key-use-one ?k))
+                    (not (key-usable ?k))
+            ))
         )
     )
 
     ;Hero can clean a location if
     ;    - the hero is at location ?loc,
-    ;    - the location is messy
-    ;Effect will be that the location is no longer messy
+    ;    - the location is room-messy
+    ;Effect will be that the location is no longer room-messy
     (:action clean
 
         :parameters (?loc - location)
@@ -186,15 +181,13 @@
 
             ; IMPLEMENT ME
             (hero-at ?loc)
-            (messy ?loc)
-
+            (room-messy ?loc)
         )
 
         :effect (and
 
             ; IMPLEMENT ME
-            (not (messy ?loc))
-
+            (not (room-messy ?loc))
         )
     )
 
